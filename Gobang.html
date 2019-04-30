@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script src="jquery-3.2.1.min.js"></script>
+	<style>
+		body { background-color: #4B4A4A; }
+		div {
+			width: 570px;
+			height: 650px;
+			margin: auto;
+			position: relative;
+		}
+		canvas {
+			background-image: url(background02.jpg);
+			background-size: 100% ;
+			box-shadow: 10px 10px 10px ;
+			border-radius: 10px;
+		}
+		#box1 {
+			position: absolute;
+			bottom: 2px;
+			background-image: url();
+		}
+		button {
+			width:  110px;
+			height: 25px;
+			margin: 5px;
+			border-radius:  10px;
+			border: 1px solid #000;
+			outline: none;
+			color: #FFF;
+			background-color: #4D3403;
+		}
+		#now {
+			width: 25px;
+			height: 25px;
+			margin: 5px 25px;
+			border: 0px;
+			border-radius: 50%;
+			background-image: url("black.png");
+			background-size: 100% 100%;
+			float: left;
+		}
+	</style>
+</head>
+<body>
+	<div>
+		<h3 id="win" align="center" style="color:#FFF;">Gobang</h3>
+		<button id="previous">悔棋</button>
+		<button id="next">让子</button>
+		<button id="showchess">查看棋谱</button>
+		<button>联机对战</button>
+		<button id="now"></button>
+		<canvas id="box" width="570" height="570"></canvas>
+		<canvas id="box1" width="570" height="570"></canvas>
+	</div>
+	<script>
+		var s = new stack();
+		var canvas = document.getElementById("box");
+		var ctx = canvas.getContext("2d");
+		var canvas1 = document.getElementById("box1");
+		var ctx1 = canvas1.getContext("2d");
+		var number = [], chess = [];
+		for(var i=0; i<19; i++) {
+			number[i] = [];
+			chess[i] =[];
+			for(var j=0; j<19; j++) {
+				number[i][j] = "-";
+				chess[i][j]  = "--";
+			}
+		}
+		for(var i=0; i<19; i++) {
+			ctx.moveTo(15+i*30, 15);
+			ctx.lineTo(15+i*30, 555);
+			ctx.moveTo(15, 15+i*30);
+			ctx.lineTo(555, 15+i*30);
+			ctx.stroke();
+		}
+		function piece(position, x, y, r, color) {
+			position.beginPath();
+			position.arc(15+x*30,15+y*30, r, 0, 2*Math.PI);
+			position.fillStyle = color;
+			position.fill();
+			position.stroke();
+		}
+		piece(ctx, 3 , 3 , 5, "black");
+		piece(ctx, 15, 3 , 5, "black");
+		piece(ctx, 3 , 15, 5, "black");
+		piece(ctx, 15, 15, 5, "black");
+		piece(ctx, 9 , 9 , 5, "black");
+		piece(ctx, 3 , 9 , 5, "black");
+		piece(ctx, 9 , 3 , 5, "black");
+		piece(ctx, 15 , 9 , 5, "black");
+		piece(ctx, 9 , 15 , 5, "black");
+
+		var flag = 1;
+		canvas1.onclick = function(e) {
+			var x = Math.floor(e.offsetX/30);
+			var y = Math.floor(e.offsetY/30);
+			if(number[x][y] == "-") {
+				chess[x][y] = flag;
+				s.push(x, y, flag++);
+				console.log(x, y, flag);
+				if(flag%2!=0){
+					piece(ctx1, x, y, 13, "white");
+					$("#now").css("background-image", "url(black.png)");
+					number[x][y] = "1";
+					str_number(x, y)
+				} else{
+					piece(ctx1, x, y, 13, "black");
+					$("#now").css("background-image", "url(white.png)");
+					number[x][y] = "0";
+					str_number(x, y)
+				}
+				show();
+			}
+		}
+		function str_number(x, y) { //计算单线上已存在的棋子是否有连续的五个同色子
+			var str = "", i, j;
+			for(i=0; i<=18; i++)
+				str = str + number[i][y]; winner(str);
+			for(i=0; i<=18; i++)
+				str = str + number[x][i]; winner(str);
+			if(x <= y) {
+				for(i=0,j=y-x; i<19,j<19; i++,j++)
+			 		str = str + number[i][j]; winner(str);
+			}else {
+				for(i=x-y,j=0; i<19,j<(18-(x-y)); i++,j++)
+			 		str = str + number[i][j]; winner(str);
+			}
+			if(x+y <=18) {
+				for(i=x+y,j=0; i>=0,j<(x+y); i--,j++)
+					str = str + number[i][j]; winner(str);
+			}else {
+				for(i=18,j=(x+y)-18; i>=(x+y)-18,j<19; i--,j++)
+					str = str + number[i][j]; winner(str);
+			}
+		}
+		function winner(str) {
+			if(str.indexOf("00000")!=-1) { $("#win").html("黑棋胜利"); }
+			if(str.indexOf("11111")!=-1) { $("#win").html("白棋胜利"); }
+		}
+
+		$(document).ready(function() {
+			$("#previous").click(function() { //悔棋,将堆栈中坐标取出，去除对应棋子
+				var nowX = s.popX(), nowY = s.popY(), nowNum = s.popNum();
+				number[nowX][nowY] = "-";
+				flag = flag - 1;
+				ctx1.beginPath();
+				ctx1.clearRect(nowX*30, nowY*30, 30, 30);
+				console.log(nowX, nowY, nowNum);
+				if(nowNum%2==0) $("#now").css("background-image", "url(white.png)");
+				else $("#now").css("background-image", "url(black.png)");
+			});
+			$("#next").click(function() { //让子
+				flag = flag - 1; 
+				if(flag%2==0) $("#now").css("background-image", "url(white.png)");
+				else $("#now").css("background-image", "url(black.png)");
+			}); 
+			$("#showchess").click(function() {
+				console.log("00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18");
+				console.log("--------------------------------------------------------");
+				for(var i=0; i<19; i++) {
+					var str = "";
+					for(var j=0; j<19; j++) {
+						if(chess[j][i] <10 && chess[j][i] >=0)
+							str = str +"0"+ chess[j][i] +" ";
+						else str = str + chess[j][i] + " ";
+					}
+					console.log(str+" |"+i);
+				}
+			});
+
+		});
+		show();
+		function show() {
+			console.clear();
+			for(var i=0; i<19; i++) {
+				var s = "";
+				for(var j=0; j<19; j++) {
+					if(chess[j][i]<10) s = s +"0"+ chess[j][i]+" ";
+					else s = s + chess[j][i] +" ";
+				}
+				console.log(s+" "+i);
+			}
+		}
+		function stack() {
+			var stackX = [], stackY = [], stackNum = [];			
+			this.push = function(x, y, number) {
+				stackX.push(x);
+				stackY.push(y);
+				stackNum.push(number);
+			}
+			this.popX = function() { return stackX.pop(); }
+			this.popY = function() { return stackY.pop(); }
+			this.popNum = function() { return stackNum.pop(); }
+			this.isEmpty = function() { return items.length == 0};
+		}
+	</script>
+</body>
+</html>

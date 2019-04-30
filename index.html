@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script src="jquery-3.2.1.min.js"></script>
+	<style>
+		body { background-color: #272626; }
+		#box {
+			width: 608px;
+			height: 608px;
+			margin: 0px auto;
+			border-radius: 10px;
+			box-shadow: 10px 10px 8px ;
+			background-image: url(background02.jpg);
+			background-size: 100%;
+		}
+		span {
+			width: 30px;
+			height: 30px;
+			float: left;
+			margin: 1px;
+			border-radius: 50%;
+			background-image: url(img01.png);
+			background-size: 100% 100%;
+			font-size: 0px;
+		}
+	</style>
+</head>
+<body>
+	<h3 id="win" align="center" style="color:#FFF;">who is winner</h3>
+	<div id="box"></div>
+	<script>
+		$(document).ready(function() {
+			var flag = 0;
+			for(var i=0; i<361; i++) {
+				mSpan = document.createElement("span");
+				mSpan.id = i;
+				$("#box").append(mSpan);
+			}
+			var getSpan = document.getElementsByTagName("span");
+			$(getSpan).html("-");
+			for(var i=0; i<getSpan.length; i++) {
+				getSpan[i].onclick = function() {
+					if($(getSpan[this.id]).html() == "-") {
+						flag++;
+						if(flag!=0 && flag%2==0){
+							$(getSpan[this.id]).css("background-image", "url(white.png)");
+							$(getSpan[this.id]).html("1");
+							str_number(this.id);
+						}else{
+							$(getSpan[this.id]).css("background-image", "url(black.png)");
+							$(getSpan[this.id]).html("0");
+							str_number(this.id);
+						}
+					}
+				}
+			}
+			function str_number(data) {
+				var str = "";
+				for(var i=parseInt(data)-4; i<=parseInt(data)+4; i++)
+					str = str + $(getSpan[i]).html(); winner(str);
+				for(var i=parseInt(data)-76; i<=parseInt(data)+76; i=i+19)
+					str = str + $(getSpan[i]).html(); winner(str);
+				for(var i=parseInt(data)-72; i<=parseInt(data)+72; i=i+18)
+					str = str + $(getSpan[i]).html(); winner(str);
+				for(var i=parseInt(data)-80; i<=parseInt(data)+80; i=i+20)
+					str = str + $(getSpan[i]).html(); winner(str);
+			}
+			function winner(str) {
+				if(str.indexOf("00000")!=-1) { $("#win").html("黑棋胜利"); }
+				if(str.indexOf("11111")!=-1) { $("#win").html("白棋胜利"); }
+			}
+		});
+	</script>
+</body>
+</html>
