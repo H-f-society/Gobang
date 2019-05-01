@@ -1,2 +1,1 @@
 # Gobang
-# Gobang
